@@ -21,7 +21,7 @@ from dolfin import *
 xmin,xmax = -5,5
 ymin,ymax = -10,0
 mesh = RectangleMesh(Point(xmin,ymin),Point(xmax,ymax),25,25)
-V = FunctionSpace(mesh,'CG',1) 
+V = FunctionSpace(mesh,'CG',1)
 
 ################################################################################################################################
 
@@ -30,7 +30,7 @@ V = FunctionSpace(mesh,'CG',1)
 # Define the lithostatic pressure
 P = Expression('rho*g*max(0.,x[1])',rho=const.rho, g=const.g)
 # Define temperature at the melting point
-Tm = Expression('T0-gamma*P',T0=const.T0, gamma=const.gamma, P=P)  
+Tm = Expression('T0-gamma*P',T0=const.T0, gamma=const.gamma, P=P)
 
 # Define the enthalpy variable
 H = Function(V)
@@ -65,7 +65,7 @@ source = Expression('x[0] > -.5 && x[0] < .5 && x[1] < -4.5 && x[1] > -5.5 ? H_s
 class Surface(SubDomain):
     def inside(self,x,on_boundary):
         return x[1] > ymax-0.1 and x[0] < xmax and x[0] > xmin and on_boundary
-bc_surf = DirichletBC(V, -10.*const.C, Surface())                
+bc_surf = DirichletBC(V, -10.*const.C, Surface())
 
 # Basal BC
 class Bed(SubDomain):
@@ -79,8 +79,8 @@ bc_bed = DirichletBC(V, -10.*const.C, Bed())
 
 # Define test and trial function
 u = TrialFunction(V)
-v = TestFunction(V)   
- 
+v = TestFunction(V)
+
 # Set up the variational form, (see Brinkerhoff 2013)
 a = u*v*dx + dt*kappa_ice*inner(nabla_grad(u), nabla_grad(v))*dx - dt*dot(vel,u.dx(1))*v*dx
 L = (H_1 + dt*source/const.rho)*v*dx
@@ -101,7 +101,7 @@ for t in ts:
     bc_surf.apply(A,b)
     bc_bed.apply(A,b)
     solve(A,H.vector(),b)
-    
+
     # Update RHS
     H_1.assign(H)
 

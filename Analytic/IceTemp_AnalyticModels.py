@@ -23,7 +23,7 @@ from scipy.special import erf
 def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True):
     """
     Analytic ice temperature model from Robin (1955)
-    
+
     Assumptions:
         1) no horizontal advection
         2) vertical advection is linear with depth
@@ -39,16 +39,16 @@ def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True):
     adot:   float,  Accumulation rate (m/yr)
     const:  class,  Constants
     nz:     int,    Number of layers in the ice column
-    melt:   bool,   Choice to allow melting, when true the bed temperature 
+    melt:   bool,   Choice to allow melting, when true the bed temperature
                     is locked at the pressure melting point and melt rates
                     are calculated
-        
+
     Output
     ----------
     z:      1-D array,  Discretized height above bed through the ice column
     T:      1-D array,  Analytic solution for ice temperature
     """
-    
+
     z = np.linspace(0,H,nz)
     adot/=const.spy
     q2 = adot/(2*(const.k/(const.rho*const.Cp))*H)
@@ -74,16 +74,16 @@ from scipy.special import lambertw
 
 def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
     """
-    Meyer and Minchew (2018)    
+    Meyer and Minchew (2018)
     A 1-D analytical model of temperate ice in shear margins
     Uses the contact problem in applied mathematics
-    
+
     Assumptions:
         1) horizontal advection is treated as an energy sink
         2) vertical advection is constant in depth (they do some linear analysis in their supplement)
         4) base is at the melting temperature
         5) Melting temperature is 0 through the column
-    
+
     Parameters
     ----------
     Ts:         float,  Surface Temperature (C)
@@ -96,11 +96,11 @@ def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
     Tb:         float,  Basal temperature, at the pressure melting point
     lam:        float,  Paramaterized horizontal advection term
                         Meyer and Minchew (2018) eq. 11
-        
+
     Output
     ----------
     z:      1-D array,  Discretized height above bed through the ice column
-    T:      1-D array,  Analytic solution for ice temperature    
+    T:      1-D array,  Analytic solution for ice temperature
     """
 
     z = np.linspace(0.,H,nz)
@@ -121,7 +121,7 @@ def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
         # Find the temperate thickness
         if eps_xy > eps_bar:
             hbar = 1.-np.sqrt(2./Br)
-        else: 
+        else:
             hbar = 0.
         # Solve for the temperature profile
         T = Ts + dT*(Br/2.)*(1.-((z/H)**2.)-2.*hbar*(1.-z/H))
@@ -138,11 +138,11 @@ def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
         else:
             hbar = 0.
         T = Ts + dT*((Br-LAM)/Pe)*(1.-z/H+(1./Pe)*np.exp(Pe*(hbar-1.))-(1./Pe)*np.exp(Pe*((hbar-z/H))))
-        T[z/H<hbar] = 0. 
+        T[z/H<hbar] = 0.
     return z,T
 
 ###############################################################################
-    
+
 def PerolRiceAnalytic(Ts,adot,H,eps_xy,rateFactor,const,nz=101,T_ratefactor=-10.):
     """
     Perol and Rice (2015)
@@ -162,13 +162,13 @@ def PerolRiceAnalytic(Ts,adot,H,eps_xy,rateFactor,const,nz=101,T_ratefactor=-10.
     const:      class,  Constants
     nz:         int,    Number of layers in the ice column
     T_ratefactor float, Temperature input to the rate factor function, A(T)
-        
+
     Output
     ----------
     z:          1-D array,  Discretized height above bed through the ice column
-    T:          1-D array,  Analytic solution for ice temperature   
+    T:          1-D array,  Analytic solution for ice temperature
     """
-    
+
     # Height
     z = np.linspace(0,H,nz)
     # Peclet Number

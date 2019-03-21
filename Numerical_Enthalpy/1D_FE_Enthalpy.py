@@ -6,9 +6,9 @@ Created on Mon Nov  7 15:52:13 2016
 
 @author: ben
 
-This is a heat transfer model which was written to help us understand 
+This is a heat transfer model which was written to help us understand
 warming mechanisms in the ablation zone. The temperature is initiated to
-measured data, then an advection-diffusion equation is solved at each time step. 
+measured data, then an advection-diffusion equation is solved at each time step.
 I use a Lagrangian reference frame, so the profile is tracking down-glacier
 through time. The mesh shrinks to account for ablation at the surface, and the
 model is run until the ice thickness is 0.0
@@ -27,14 +27,14 @@ class Constants(object):
         self.gamma = 7.4e-8                        #Clausius-Clapeyron (K Pa-1) From van der Veen p. 209
         # pg 144 Van der Veen - from Yen CRREL 1981
         self.rho = 917.                         #Bulk density of ice (kg m-3)
-        self.rhow = 1000.                       # density of water        
+        self.rhow = 1000.                       # density of water
         self.k = 2.1                          #Conductivity of ice (J m-1 K-1 s-1)
         self.C = 2097.                        #Heat capacity of ice (J kg-1 K-1) - ** Van der Veen uses 2097 but see Tr and Aschwanden 2012)
         self.L = 3.335e5                        #Latent heat of fusion (J kg-1)
-        # From other sources        
+        # From other sources
         self.nu = 1.045e-4                  # moisture diffusivity for numerical stability, Brinkerhoff (2013)
-        self.T0 = 273.15                         #Reference Tempearature, triple point for water 
-        self.tol = DOLFIN_EPS              #Tolerance for numerical issues       
+        self.T0 = 273.15                         #Reference Tempearature, triple point for water
+        self.tol = DOLFIN_EPS              #Tolerance for numerical issues
         self.R = 8.321           # the gas constant
         self.q_geo = .0513       # Geothermal heat flux (W m-2) (Dahl-Jensen 1998)
 
@@ -96,15 +96,15 @@ t_w_start = (46.-30.)/(Uvel/1000.) #29. is the distance from terminus to crevass
 t_w_end = (46.-28.5)/(Uvel/1000.) #29. is the distance from terminus to crevasse field
 
 # Define the mesh from the ice surface to some max depth and width values, refine the mesh with a larger n
-parameters['allow_extrapolation'] = True    
+parameters['allow_extrapolation'] = True
 #Mesh = IntervalMesh(n,0,Thick)
 Mesh = RectangleMesh(Point(0,0),Point(1.5*wavelength,Thick),50,200)
-V = FunctionSpace(Mesh,'CG',1)    
+V = FunctionSpace(Mesh,'CG',1)
 
 # Define the initial temperature profile based on the optimization above
 T_ = Expression('T0+p0*sin(x[ndim]*p1+p2)+p3*sin(x[ndim]*p4+p5)+p6*sin(x[ndim]*p7+p8)+p9',
                 ndim=ndim,T0=const.T0,p0=Opt[0],p1=Opt[1],p2=Opt[2],p3=Opt[3],p4=Opt[4],
-                p5=Opt[5],p6=Opt[6],p7=Opt[7],p8=Opt[8],p9=Opt[9]) 
+                p5=Opt[5],p6=Opt[6],p7=Opt[7],p8=Opt[8],p9=Opt[9])
 
 #Pressure-Dependent Melting Point (degC)
 Tm = Expression('T0-rho*g*gamma*(Thick-x[ndim])',ndim=ndim,T0=const.T0,rho=const.rho,g=const.g,gamma=const.gamma,Thick=Thick)
@@ -130,11 +130,11 @@ if Latent == 'Top':
     # for top only
     q_latent = Expression('x[ndim] > s_crevasse ? rhow*L*omega : 0.',
                 ndim=ndim,s_crevasse=Thick-100.,rhow=const.rhow,L=const.L,omega=0.)
-elif Latent == 'Both':    
+elif Latent == 'Both':
     # for both top and bottom
     q_latent = Expression('x[ndim] > s_crevasse ? rhow*L*omega : (x[ndim] < b_crevasse ? rhow*L*omega : 0.)',
                           ndim=ndim,s_crevasse=Thick-100.,b_crevasse=100.,rhow=const.rhow,L=const.L,omega=0.)
-else: 
+else:
     q_latent = Expression('rhow*L*omega',rhow=const.rhow,L=const.L,omega=0.)
 
 ################################################################################################################################
@@ -143,21 +143,21 @@ else:
 
 # update the parameters at the surface boundary
 def SurfConstraints(Thick,t,dt):
-    # elevation-dependent ablation (m/yr) lapse rate is from van de wal 2012 (~ -4.22 at margin from mean site 4 in van de wal 2012)    
-    Ablate = (Thick*Abl_lapse)+Abl_start  
+    # elevation-dependent ablation (m/yr) lapse rate is from van de wal 2012 (~ -4.22 at margin from mean site 4 in van de wal 2012)
+    Ablate = (Thick*Abl_lapse)+Abl_start
     # air temperature, lapse rate from Fausto 2009 and from Van As 2012 (~ -5 at Kanger and KAN_B)
-    AirT = (Thick*T_lapse)+T_start   
+    AirT = (Thick*T_lapse)+T_start
     # Slope and thickness updates
     slope = (-Ablate)/(Uvel)
     Thick += Ablate*dt
     return AirT,Thick,slope
 
 # The surface boundary condition will update at each time step because the surface is lowering
-def AirBC(AirT,Thick):   
+def AirBC(AirT,Thick):
     # Define an air subdomain for the boundary condition of air temp from MET station
     class Air(SubDomain):
         def inside(self, x, on_boundary):
-            # Anything above the snow surface (lower depth) is 'air' 
+            # Anything above the snow surface (lower depth) is 'air'
             return near(x[ndim],Thick) and on_boundary
     # Update the surface boundary condition to the current air temp (include one for enthalpy to get rid of old water)
     bc_air = DirichletBC(V, (AirT)*const.C, Air())
@@ -187,8 +187,8 @@ kappa = 0.5*(const.k/(const.C*const.rho)-const.nu/const.rho)*(1.-((2./np.pi)*ata
 
 # Define test and trial function
 u = TrialFunction(V)
-v = TestFunction(V)   
- 
+v = TestFunction(V)
+
 # Set up the variational form, (see Brinkerhoff 2013)
 F_1 = ((u-H_1)/(const.spy*dt) + dot(vel,nabla_grad(u)))*v*dx + kappa*inner(nabla_grad(u), nabla_grad(v))*dx\
                 - 1./(const.rho)*(const.q_geo*v*ds(1) + (q_strain+q_latent)*v*dx)
@@ -204,7 +204,7 @@ dof2v_map = dof_to_vertex_map(V)
 
 #############################################################################################################################
 
-### Loop through the problem until ice is completely melted ### 
+### Loop through the problem until ice is completely melted ###
 
 # Depth array and empty 'out' arrays for data output, high low and mid for variable vertical advection experiments
 out_high = np.empty((0,101))
@@ -212,21 +212,21 @@ out_low = np.empty((0,101))
 out_mid = np.empty((0,101))
 depth_out = np.empty((0,101))
 # Compute solution while the ice sheet thickness is greater than 0 meters
-while Thick > 0.:             
-    #Update all variables 
+while Thick > 0.:
+    #Update all variables
     LastThick = Thick
     AirT, Thick, slope = SurfConstraints(Thick,t,dt)
-        
+
     print '', 'Time = ', t
     print 'Thickness = ', Thick
     print 'Slope = ', slope
-    Tm.Thick=Thick  
+    Tm.Thick=Thick
     T.Tm=Tm
     q_strain.temp = T
     q_strain.Tm = Tm
     q_strain.Thick=Thick
-    q_strain.slope=slope  
-    
+    q_strain.slope=slope
+
     # Before I deform the mesh I need to tell each node what its new locations temperature is going to be
     Hold = np.zeros(Mesh.num_vertices())
     for i in range(len(Mesh.coordinates())):
@@ -234,8 +234,8 @@ while Thick > 0.:
         # Grab the temperature from a lower location where the node is going to be moved, Thick/LastThick
         Hold[i] = H_1(node[0],node[1]*Thick/LastThick)
     H_1.vector()[:] = Hold[dof2v_map]
-        
-    # bring each node down by the ratio Thick/LastThick        
+
+    # bring each node down by the ratio Thick/LastThick
     Y *= Thick/LastThick
     Mesh.bounding_box_tree().build(Mesh)
 
@@ -245,17 +245,17 @@ while Thick > 0.:
         q_latent.omega = omega
     else:
         q_latent.omega = 0.
-    
-    # update the air boundary condition and solve the diffusion equation for the temperature variable    
+
+    # update the air boundary condition and solve the diffusion equation for the temperature variable
     bc_air = AirBC(AirT,Thick)
     solve(a==L,H,bc_air)
-    # Limit the enthalpy at Hmax    
+    # Limit the enthalpy at Hmax
     H.vector()[H.vector()[:]>Hmax] = Hmax
-    
-    #plot(H,range_min=const.C*(-15.),range_max=const.C*(1.))   
-    T.H = H    
+
+    #plot(H,range_min=const.C*(-15.),range_max=const.C*(1.))
+    T.H = H
     H_1.assign(H)
-    
+
     # export data
     if t%.5 < 1e-5 or t%.5 > .5-1e-5:
         Depths = np.linspace(0,Thick,100)
