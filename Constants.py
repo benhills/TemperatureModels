@@ -78,6 +78,9 @@ class constantsTempVanDerVeen(object):
         # VDV (2013) pg 209
         self.Cw = 4.217                         # Specific Heat Capacity of Water J kg-1 K-1
         self.Ct = -7.4e-8                       # Pressure-Dependence of Melting Temp K Pa-1
+        # General
+        self.R = 8.321                          # Gas Constant J mol-1 K-1
+
 
 ### Constants
 class constantsIceDiver(object):
@@ -107,4 +110,3 @@ class constantsIceDiver(object):
         self.kw = 0.555
         # random
         self.tol = 1e-5                              # tolerance for numerics
-

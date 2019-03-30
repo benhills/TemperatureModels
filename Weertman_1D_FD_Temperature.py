@@ -8,12 +8,12 @@ Created on Fri Aug 31 08:55:55 2018
 
 # Import necessary libraries
 import numpy as np
-from scipy.special import erf
 from scipy.optimize import least_squares
 from scipy import sparse
+from IceTemp_AnalyticModels import Robin_T
 
 def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.,0.],
-               eps_xy=0.,nz=101,conv_crit=1e-4):
+               eps_xy=0.,nz=101,steady=True,ts=[],conv_crit=1e-4,tol=1e-4,melt=True):
     """
     1-D finite difference model for ice temperature based on
     Weertman (1968)
@@ -40,6 +40,8 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
     v_surf:     2x1 array,  Surface velocity in x/y directions          [m/yr]
     eps_xy:     float,      Plane strain rate                           [m/m]
     nz:         int,        Number of layers in the ice column
+    steady:     bool,       Decide to run to convergence or in transient
+    ts:         array,      If not steady, input temperatures that are monotonically increasing
     conv_crit:  float,      Convergence criteria, maximum difference between
                             temperatures at final time step
 
@@ -49,13 +51,19 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
     T_weertman: 1-D array,  Numerical solution for ice temperature
     T_robin:    1-D array,  Analytic solution for ice temperature
     T_diff:     1-D array,  Convergence profile (i.e. difference between final and t-1 temperatures)
+    M:          1-D array,  Melt rates through time (m/yr)
 
     """
 
     # Height above bed array
     z = np.linspace(0,H,nz)
+    dz = np.mean(np.gradient(z))
     # accumulation rate to m/sec
     adot/=const.spy
+    # times to seconds
+    ts *= const.spy
+    # pressure melting
+    PMP = const.rho*const.g*(H-z)*const.beta
 
     ###########################################################################
 
@@ -63,10 +71,20 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
 
     # Vertical Velocity
     v_z_surf = adot+v_surf[0]*dH[0]+v_surf[1]*dH[1]
+    if hasattr(v_z_surf,"__len__"):
+        robin_adv = v_z_surf[0]*const.spy
+        Ts_robin = Ts[0]
+    else:
+        robin_adv = v_z_surf*const.spy
+        Ts_robin = Ts
+
+    # Call the analytic solutino from another script
+    z_robin,T_robin = Robin_T(Ts_robin,qgeo,H,robin_adv,const,nz=nz)
+
     # Characteristic Diffusion Length, Weertman (1968) eq. 2
-    L = (2.*(const.k/(const.rho*const.Cp))*H/v_z_surf)**.5
+    #L = (2.*(const.k/(const.rho*const.Cp))*H/robin_adv)**.5
     # Weertman (1968) eq. 1
-    T_robin = Ts + (np.pi/4.)**.5*L*(-qgeo/const.k)*(erf(z/L)-erf(H/L))
+    #T_robin = Ts_robin + (np.pi/4.)**.5*L*(-qgeo/const.k)*(erf(z/L)-erf(H/L))
 
     ###########################################################################
 
@@ -110,8 +128,8 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
     Q = (eps_e*tau_e)/(const.rho*const.Cp)
 
     # Horizontal Temperature Gradients, Weertman (1968) eq. 6b
-    dTdx = dTs[0] + (T_robin-Ts)/2.*(1./H*dH[0]-(1/adot)*da[0])
-    dTdy = dTs[1] + (T_robin-Ts)/2.*(1./H*dH[1]-(1/adot)*da[1])
+    dTdx = dTs[0] + (T_robin-np.mean(Ts))/2.*(1./H*dH[0]-(1/np.mean(adot))*da[0])
+    dTdy = dTs[1] + (T_robin-np.mean(Ts))/2.*(1./H*dH[1]-(1/np.mean(adot))*da[1])
     # Advection Rates (K s-1)
     Adv_x = -v_x*dTdx
     Adv_y = -v_y*dTdy
@@ -127,12 +145,24 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
     T = T_robin.copy()
     dz = np.mean(np.gradient(z))
     Tgrad = -qgeo/const.k
-    v_z = v_z_surf*z/H
+    if hasattr(v_z_surf,"__len__"):
+        v_z = v_z_surf[0]*z/H
+    else:
+        v_z = v_z_surf*z/H
 
+    # Choose time step
+    if steady:
+        dt = 0.5*dz**2./(const.k/(const.rho*const.Cp))
+    else:
+        # Check if the time series is monotonically increasing
+        if len(ts) == 0:
+            raise ValueError("If steady=False, must input a time array.")
+        if not np.all(np.gradient(np.gradient(ts))<tol):
+            raise ValueError("Time series must monotonically increase.")
+        dt = np.mean(np.gradient(ts))
     # Stability
-    dt = 0.5*dz**2./(const.k/(const.rho*const.Cp))
     if max(v_z)*dt/dz > 1.:
-        raise ValueError("Numerically unstable, choose a smaller time step")
+        raise ValueError("Numerically unstable, choose a smaller time step or a larger spatial step.")
 
     # Stencils
     diff = (const.k/(const.rho*const.Cp))*(dt/(dz**2.))
@@ -163,16 +193,46 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
 
     ### Iterations and Output ###
 
-    # Iterate until convergence
-    i = 0
-    T_diff = 0.
-    while i < 1 or sum(abs(T_diff)) > conv_crit:
-        T_new = A*T - B*T + dt*Sdot
-        T_diff = T_new-T
-        print(sum(abs(T_diff)))
-        T = T_new
-        i += 1
+    if steady:
+        # Iterate until convergence
+        i = 0
+        T_diff = 0.
+        while i < 1 or sum(abs(T_diff)) > conv_crit:
+            T_new = A*T - B*T + dt*Sdot
+            T_diff = T_new-T
+            print(sum(abs(T_diff)))
+            T = T_new
+            i += 1
+            if np.any(T>PMP) and melt==True:
+                Tplus = np.trapz(T[T>PMP]-PMP[T>PMP],z[T>PMP])
+                T[T>PMP] = PMP[T>PMP]
+                M = Tplus*const.rho*const.Cp/(const.rhow*const.L*dt/const.spy)
 
-    T_weertman = T
-#
-    return z,T_weertman,T_robin,T_diff
+    else:
+        T_weertman = np.empty((0,len(z)))
+        int_stencil = np.ones_like(z)
+        int_stencil[[0,-1]] = 0.5
+        M = np.empty((0))
+        # iterate through all times
+        for i in range(len(ts)):
+            # Update to current time
+            t = ts[i]
+            if i%100 == 0:
+                print('Start %.0f, current %.0f, end %.0f (years).'%(ts[0]/const.spy,t/const.spy,ts[-1]/const.spy))
+                T_weertman = np.append(T_weertman,[T],axis=0)
+            Tsurf = Ts[i]
+            adv = v_z_surf[i]/v_z_surf[0]
+            # set surface boundary condition
+            T[-1] = Tsurf
+            # solve
+            T_new = A*T - adv*B*T + dt*Sdot
+            T = T_new
+            if np.any(T>PMP) and melt==True:
+                Tplus = (T[T>PMP]-PMP[T>PMP])*int_stencil[T>PMP]*dz
+                T[T>PMP] = PMP[T>PMP]
+                if i%100 == 0:
+                    M = np.append(M,Tplus*const.rho*const.Cp*const.spy/(const.rhow*const.L*dt))
+                    print('dt=',dt,'melt=',M[-1]*1000.)
+        T_diff = T-T_robin
+
+    return z,T_weertman,T_robin,T_diff,M

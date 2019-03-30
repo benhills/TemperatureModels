@@ -20,7 +20,7 @@ from scipy.special import erf
 ###############################################################################
 
 
-def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True):
+def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True,verbose=True):
     """
     Analytic ice temperature model from Robin (1955)
 
@@ -49,6 +49,13 @@ def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True):
     T:      1-D array,  Analytic solution for ice temperature
     """
 
+    if verbose:
+        print('Solving Robin Solution for analytic temperature profile')
+        print('Surface Temperature:',Ts)
+        print('Geothermal Flux:',qgeo)
+        print('Ice Thickness:',H)
+        print('Accumulation Rate',adot)
+
     z = np.linspace(0,H,nz)
     adot/=const.spy
     q2 = adot/(2*(const.k/(const.rho*const.Cp))*H)
@@ -58,14 +65,17 @@ def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True):
     dTs = Ts - TTb[-1]
     T = TTb + dTs
     # recalculate if basal temperature is above melting (see van der Veen pg 148)
-    Tm = const.beta*const.rho*9.81*H
+    Tm = const.beta*const.rho*const.g*H
     if melt == True and T[0] > Tm:
         Tb_grad = -2.*np.sqrt(q2)*(Tm-Ts)/np.sqrt(np.pi)*(np.sqrt(erf(adot*H*const.rho*const.Cp/(2.*const.k)))**(-1))
         TTb = Tb_grad*np.array([quad(f,0,zi)[0] for zi in z])
         dTs = Ts - TTb[-1]
         T = TTb + dTs
         M = (Tb_grad + qgeo/const.k)*const.k/const.L
-        print('Melting at the bed: ', round(M*const.spy/const.rho*1000.,2), 'mm/year')
+        if verbose:
+            print('Melting at the bed: ', round(M*const.spy/const.rho*1000.,2), 'mm/year')
+    if verbose:
+        print('Finished Robin Solution for analytic temperature profile')
     return z,T
 
 ###############################################################################
