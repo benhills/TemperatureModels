@@ -232,7 +232,7 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
                     Mrate = np.append(Mrate,Tplus*const.rho*const.Cp*const.spy/(const.rhow*const.L*dt))
             # If freezing
             elif Mcum[-1] > 0 and melt:
-                Tminus = T[-1]-PMP[-1]*0.5*dz
+                Tminus = (T[-1]-PMP[-1])*0.5*dz
                 T[-1] = PMP[-1]
                 if i%100 == 0:
                     Mrate = np.append(Mrate,Tminus*const.rho*const.Cp*const.spy/(const.rhow*const.L*dt))
