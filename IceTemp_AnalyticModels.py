@@ -66,14 +66,14 @@ def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True,verbose=True):
     T = TTb + dTs
     # recalculate if basal temperature is above melting (see van der Veen pg 148)
     Tm = const.beta*const.rho*const.g*H
-    if melt == True and T[0] > Tm:
+    if melt and T[0] > Tm:
         Tb_grad = -2.*np.sqrt(q2)*(Tm-Ts)/np.sqrt(np.pi)*(np.sqrt(erf(adot*H*const.rho*const.Cp/(2.*const.k)))**(-1))
         TTb = Tb_grad*np.array([quad(f,0,zi)[0] for zi in z])
         dTs = Ts - TTb[-1]
         T = TTb + dTs
         M = (Tb_grad + qgeo/const.k)*const.k/const.L
         if verbose:
-            print('Melting at the bed: ', round(M*const.spy/const.rho*1000.,2), 'mm/year')
+            print('Melting at the bed: ', np.round(M*const.spy/const.rho*1000.,2), 'mm/year')
     if verbose:
         print('Finished Robin Solution for analytic temperature profile')
     return z,T
