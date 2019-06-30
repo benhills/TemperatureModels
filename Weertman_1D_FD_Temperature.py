@@ -236,7 +236,7 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
                 T[0] = PMP[0]
                 if i%100 == 0:
                     Mrate = np.append(Mrate,Tminus*const.rho*const.Cp*const.spy/(const.rhow*const.L*dt))
-            elif melt and i%100 == 0:
+            elif i%100 == 0:
                     Mrate = np.append(Mrate,0.)
             # update the cumulative melt by the melt rate
             if i%100 == 0:
