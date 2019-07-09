@@ -214,7 +214,7 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
         for i in range(len(ts)):
             # Update to current time
             t = ts[i]
-            if i%100 == 0:
+            if i%100 == 0 or t == ts[-1]:
                 print('Start %.0f, current %.0f, end %.0f (years).'%(ts[0]/const.spy,t/const.spy,ts[-1]/const.spy))
                 T_weertman = np.append(T_weertman,[T],axis=0)
             Tsurf = Ts[i]
@@ -228,18 +228,21 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
             if np.any(T>PMP) and melt:
                 Tplus = (T[T>PMP]-PMP[T>PMP])*int_stencil[T>PMP]*dz
                 T[T>PMP] = PMP[T>PMP]
-                if i%100 == 0:
+                if i%100 == 0 or t == ts[-1]:
                     Mrate = np.append(Mrate,Tplus*const.rho*const.Cp*const.spy/(const.rhow*const.L*dt))
             # If freezing
             elif Mcum[-1] > 0 and melt:
                 Tminus = (T[0]-PMP[0])*0.5*dz
                 T[0] = PMP[0]
-                if i%100 == 0:
+                if i%100 == 0 or t == ts[-1]:
                     Mrate = np.append(Mrate,Tminus*const.rho*const.Cp*const.spy/(const.rhow*const.L*dt))
-            elif i%100 == 0:
+            else:
+                T[T>PMP] = PMP[T>PMP]
+                if i%100 == 0 or t == ts[-1]:
                     Mrate = np.append(Mrate,0.)
+
             # update the cumulative melt by the melt rate
-            if i%100 == 0:
+            if i%100 == 0 or t == ts[-1]:
                 # update the cumulative melt by the melt rate
                 Mcum = np.append(Mcum,Mcum[-1]+Mrate[-1]*100*dt/const.spy)
                 print('dt=',dt/const.spy,'melt=',np.round(Mrate[-1]*1000.,2),np.round(Mcum[-1],2))
