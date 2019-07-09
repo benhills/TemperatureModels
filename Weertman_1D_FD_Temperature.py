@@ -35,7 +35,7 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
     adot:       float,      Accumulation rate                           [m/s]
     const:      class,      Constants
     dTs:        2x1 array,  Change in air temperature over distance x/y [C/m]
-    dH:         2x1 array,  Thickness gradient in x/y directions        [m/m]
+    dH:         2x1 array,  Thickness gradient in x/y directions, used for deformational flow calculation        [m/m]
     da:         2x1 array,  Accumulation gradient in x/y directions     [m/yr/m]
     v_surf:     2x1 array,  Surface velocity in x/y directions          [m/yr]
     eps_xy:     float,      Plane strain rate                           [m/m]
@@ -118,6 +118,7 @@ def Weertman_T(Ts,qgeo,H,adot,const,dTs=[0.,0.],dH=[0.,0.],da=[0.,0.],v_surf=[0.
     # effective stress and strain rate (van der Veen eq. 2.6/2.7)
     tau_e = np.sqrt((2.*tau_xz**2. + 2.*tau_yz**2.)/2.)
     eps_e = np.sqrt((2.*eps_xz**2. + 2.*eps_yz**2.)/2.)
+
     # strain heat term (K s-1)
     Q = (eps_e*tau_e)/(const.rho*const.Cp)
 
