@@ -6,8 +6,7 @@ Created on Fri Jul 27 17:15:22 2018
 @author: benhills
 """
 
-###############################################################################
-
+# -----------------------------------------------------------------------
 
 class constantsUniversal(object):
     """
@@ -23,7 +22,7 @@ class constantsUniversal(object):
         self.kBoltz = 1.38064852e-23            # m2 kg s-2 K-1
         self.c = 3e8                            # Speed of Light in Free Space m s-1
 
-###############################################################################
+# -----------------------------------------------------------------------
 
 class constantsTempCuffPat(object):
     """
@@ -81,6 +80,7 @@ class constantsTempVanDerVeen(object):
         # General
         self.R = 8.321                          # Gas Constant J mol-1 K-1
 
+# -----------------------------------------------------------------------
 
 ### Constants
 class constantsIceDiver(object):
@@ -110,3 +110,37 @@ class constantsIceDiver(object):
         self.kw = 0.555
         # random
         self.tol = 1e-5                              # tolerance for numerics
+
+# -----------------------------------------------------------------------
+
+class constantsBeem(object):
+    """
+    Temperature Constants
+
+    Beem et al. (2017)
+    Table 1
+    """
+    def __init__(self):
+        # Thermal Conductivity
+        self.ki = 2.1                           # Thermal Conductivity of ice J m-1 K-1 s-1
+        self.kw = 0.6                           # Thermal Conductivity of water J m-1 K-1 s-1
+        self.k_sed = 1.5                        # Thermal Conductivity of sediment J m-1 K-1 s-1
+        self.k_rock = 2.5                       # Thermal Conductivity of bedrock J m-1 K-1 s-1
+
+        # Density
+        self.rho_i = 917.                       # Density of ice kg m-3
+        self.rho_w = 1000.                      # Density of water kg m-3
+        self.rho_sed = 1500.                    # Density of sediment kg m-3
+        self.rho_rock = 3000.                   # Density of bedrock kg m-3
+
+        # Heat Capacity
+        self.Cp_i = 2097.                       # Specific Heat Capacity of ice J kg-1 K-1
+        self.Cp_w = 4184.                       # Specific Heat Capacity of water J kg-1 K-1
+        self.Cp_sed = 3000.                     # Specific Heat Capacity J of sediment kg-1 K-1
+        self.Cp_rock = 800.                     # Specific Heat Capacity J of bedrock kg-1 K-1
+
+        # Latent Heat of Fusion
+        self.L = 3.34e5                         # Latent Heat of Fusion J kg-1
+
+        # Ice Viscosity Parameter
+        self.A = 3.e-24                     # Creep Parameter Pa-3 s-1 (Beem says kPa-3 a-1 but that seems wrong?)
