@@ -121,6 +121,9 @@ class constantsBeem(object):
     Table 1
     """
     def __init__(self):
+        # general
+        self.spy  = 60.*60.*24.*365.24          # sec yr-1
+
         # Thermal Conductivity
         self.ki = 2.1                           # Thermal Conductivity of ice J m-1 K-1 s-1
         self.kw = 0.6                           # Thermal Conductivity of water J m-1 K-1 s-1

@@ -16,11 +16,16 @@ The models included here, from simplest to most complex are:
 import numpy as np
 from scipy.integrate import quad
 from scipy.special import erf
+from scipy.special import gamma as γ
+from scipy.special import gammaincc as γincc
+from Constants import constantsTempCuffPat
+from IceViscosity import rateFactorCuffPat
 
 ###############################################################################
 
 
-def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True,verbose=True):
+def Robin_T(Ts,qgeo,H,adot,
+        const=constantsTempCuffPat,nz=101,melt=True,verbose=True):
     """
     Analytic ice temperature model from Robin (1955)
 
@@ -75,7 +80,60 @@ def Robin_T(Ts,qgeo,H,adot,const,nz=101,melt=True,verbose=True):
         if verbose:
             print('Melting at the bed: ', np.round(M*const.spy/const.rho*1000.,2), 'mm/year')
     if verbose:
-        print('Finished Robin Solution for analytic temperature profile')
+        print('Finished Robin Solution for analytic temperature profile.\n')
+    return z,T
+
+###############################################################################
+
+def Rezvan_T(Ts,qgeo,adot,H,nz=101,
+             const=constantsTempCuffPat(),
+             rateFactor=rateFactorCuffPat,
+             dHdx=0.,tau_dx=0.,T_ratefactor=-10.,
+             gamma=1.397,gamma_plus=True):
+    """
+    1-D Analytical temperature profile from Rezvanbehbahani et al. (2019)
+    Main improvement from the Robin (1955) solution is the nonlinear velocity profile
+
+    Parameters
+    -----------
+
+    Output
+    -----------
+
+    """
+
+    # if the surface accumulation is input in m/yr convert to m/s
+    if adot>1e-5:
+        adot/=const.spy
+    # Thermal diffusivity
+    K = const.k/(const.rho*const.Cp)
+    if gamma_plus:
+        # Solve for gamma using the logarithmic regression with the Pe number
+        Pe = adot*H/K
+        if Pe < 5.:
+            print('Pe:',Pe)
+            print('The gamma_plus fit is not well-adjusted for low Pe numbers.')
+        # Rezvanbehbahani (2019) eq. (19)
+        gamma = 1.39+.044*np.log(Pe)
+    if dHdx != 0. and tau_dx == 0.:
+        # driving stress Nye (1952)
+        tau_dx = const.rho*const.g*H*abs(dHdx)
+    if tau_dx != 0:
+        # Energy from strain heating is added to the geothermal flux
+        A = rateFactor(np.array([T_ratefactor]),const)[0]
+        # Rezvanbehbahani (2019) eq. (22)
+        qgeo_s = (2./5.)*A*H*tau_dx**4.
+        qgeo += qgeo_s
+    # Rezvanbehbahani (2019) eq. (19)
+    lamb = adot/(K*H**gamma)
+    phi = -lamb/(gamma+1)
+    z = np.linspace(0,H,nz)
+
+    # Rezvanbehbahani (2019) eq. (17)
+    Γ_1 = γincc(1/(1+gamma),-phi*z**(gamma+1))*γ(1/(1+gamma))
+    Γ_2 = γincc(1/(1+gamma),-phi*H**(gamma+1))*γ(1/(1+gamma))
+    term2 = Γ_1-Γ_2
+    T = Ts + qgeo*(-phi)**(-1./(gamma+1.))/(const.k*(gamma+1))*term2
     return z,T
 
 ###############################################################################
@@ -115,7 +173,7 @@ def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
 
     z = np.linspace(0.,H,nz)
     # rate factor
-    A = rateFactor(np.array([-10.]))
+    A = rateFactor(np.array([-10.]),const=const)
     # Brinkman Number
     S = 2.*A**(-1./const.n)*(eps_xy)**((const.n+1.)/const.n)
     dT = Tb - Ts
@@ -184,7 +242,7 @@ def PerolRiceAnalytic(Ts,adot,H,eps_xy,rateFactor,const,nz=101,T_ratefactor=-10.
     # Peclet Number
     Pe = adot*H/(const.k/(const.rho*const.Cp))
     # Rate Factor
-    A = rateFactor(np.array([T_ratefactor]))
+    A = rateFactor(np.array([T_ratefactor]),const=const)
     # Strain Heating
     S = 2.*A**(-1./const.n)*(eps_xy/2.)**((const.n+1.)/const.n)
     print('Perol', A, S)
