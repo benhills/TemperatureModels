@@ -24,8 +24,8 @@ from IceViscosity import rateFactorCuffPat
 ###############################################################################
 
 
-def Robin_T(Ts,qgeo,H,adot,
-        const=constantsTempCuffPat,nz=101,melt=True,verbose=True):
+def Robin_T(Ts,qgeo,H,adot,nz=101,
+        const=constantsTempCuffPat,melt=True,verbose=True):
     """
     Analytic ice temperature model from Robin (1955)
 
@@ -42,8 +42,8 @@ def Robin_T(Ts,qgeo,H,adot,
     qgeo:   float,  Geothermal flux (W/m2)
     H:      float,  Ice thickness (m)
     adot:   float,  Accumulation rate (m/yr)
-    const:  class,  Constants
     nz:     int,    Number of layers in the ice column
+    const:  class,  Constants
     melt:   bool,   Choice to allow melting, when true the bed temperature
                     is locked at the pressure melting point and melt rates
                     are calculated
@@ -85,21 +85,42 @@ def Robin_T(Ts,qgeo,H,adot,
 
 ###############################################################################
 
-def Rezvan_T(Ts,qgeo,adot,H,nz=101,
+def Rezvan_T(Ts,qgeo,H,adot,nz=101,
              const=constantsTempCuffPat(),
              rateFactor=rateFactorCuffPat,
-             dHdx=0.,tau_dx=0.,T_ratefactor=-10.,
+             T_ratefactor=-10.,
+             dHdx=0.,tau_dx=0.,
              gamma=1.397,gamma_plus=True):
     """
     1-D Analytical temperature profile from Rezvanbehbahani et al. (2019)
     Main improvement from the Robin (1955) solution is the nonlinear velocity profile
 
+    Assumptions:
+        1) no horizontal advection
+        2) vertical advection takes the form v=(z/H)**(gamma)
+        3) firn column is treated as equivalent thickness of ice
+        TODO: 4) If base is warmer than the melting temperature recalculate with new basal gradient
+        5) strain heating is added to the geothermal flux
+
     Parameters
-    -----------
+    ----------
+    Ts:     float,  Surface Temperature (C)
+    qgeo:   float,  Geothermal flux (W/m2)
+    H:      float,  Ice thickness (m)
+    adot:   float,  Accumulation rate (m/yr)
+    nz:     int,    Number of layers in the ice column
+    const:  class,  Constants
+    rateFactor:
+    T_ratefactor:
+    dHdx
+    tau_dx
+    gamma:
+    gamma_plus:
 
     Output
-    -----------
-
+    ----------
+    z:      1-D array,  Discretized height above bed through the ice column
+    T:      1-D array,  Analytic solution for ice temperature
     """
 
     # if the surface accumulation is input in m/yr convert to m/s
