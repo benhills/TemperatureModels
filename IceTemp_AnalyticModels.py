@@ -25,7 +25,7 @@ from IceViscosity import rateFactorCuffPat
 
 
 def Robin_T(Ts,qgeo,H,adot,nz=101,
-        const=constantsTempCuffPat,melt=True,verbose=True):
+        const=constantsTempCuffPat(),melt=True,verbose=True):
     """
     Analytic ice temperature model from Robin (1955)
 
@@ -161,7 +161,10 @@ def Rezvan_T(Ts,qgeo,H,adot,nz=101,
 
 from scipy.special import lambertw
 
-def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
+def Meyer_T(Ts,H,adot,eps_xy,nz=101,
+            const=constantsTempCuffPat(),
+            rateFactor=rateFactorCuffPat,
+            Tb=0.,lam=0.):
     """
     Meyer and Minchew (2018)
     A 1-D analytical model of temperate ice in shear margins
@@ -179,9 +182,9 @@ def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
     H:          float,  Ice thickness (m)
     adot:       float,  Accumulation rate (m/yr)
     eps_xy:     float,  Plane strain rate (m/m)
-    rateFactor: func,   function for the rate factor, A in Glen's Law
-    const:      class,  Constants
     nz:         int,    Number of layers in the ice column
+    const:      class,  Constants
+    rateFactor: func,   function for the rate factor, A in Glen's Law
     Tb:         float,  Basal temperature, at the pressure melting point
     lam:        float,  Paramaterized horizontal advection term
                         Meyer and Minchew (2018) eq. 11
@@ -232,7 +235,10 @@ def Meyer_T(Ts,H,adot,eps_xy,rateFactor,const,nz=101,Tb=0.,lam=0.):
 
 ###############################################################################
 
-def PerolRiceAnalytic(Ts,adot,H,eps_xy,rateFactor,const,nz=101,T_ratefactor=-10.):
+def PerolRiceAnalytic(Ts,adot,H,eps_xy,nz=101,
+                const=constantsTempCuffPat(),
+                rateFactor=rateFactorCuffPat,
+                T_ratefactor=-10.):
     """
     Perol and Rice (2015)
     Analytic Solution for temperate ice in shear margins (equation #5)
@@ -247,9 +253,9 @@ def PerolRiceAnalytic(Ts,adot,H,eps_xy,rateFactor,const,nz=101,T_ratefactor=-10.
     adot:       float,  Accumulation rate (m/yr)
     H:          float,  Ice thickness (m)
     eps_xy:     float,  Plane strain rate (m/m)
-    rateFactor: func,   function for the rate factor, A in Glen's Law
-    const:      class,  Constants
     nz:         int,    Number of layers in the ice column
+    const:      class,  Constants
+    rateFactor: func,   function for the rate factor, A in Glen's Law
     T_ratefactor float, Temperature input to the rate factor function, A(T)
 
     Output
