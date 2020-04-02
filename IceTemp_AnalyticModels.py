@@ -195,6 +195,12 @@ def Meyer_T(Ts,H,adot,eps_xy,nz=101,
     T:      1-D array,  Analytic solution for ice temperature
     """
 
+    # if the surface accumulation is input in m/yr convert to m/s
+    if adot>1e-5:
+        adot/=const.spy
+    if eps_xy>1e-4:
+        eps_xy/=const.spy
+    # Height
     z = np.linspace(0.,H,nz)
     # rate factor
     A = rateFactor(np.array([-10.]),const=const)
@@ -235,7 +241,7 @@ def Meyer_T(Ts,H,adot,eps_xy,nz=101,
 
 ###############################################################################
 
-def PerolRiceAnalytic(Ts,adot,H,eps_xy,nz=101,
+def Perol_T(Ts,adot,H,eps_xy,nz=101,
                 const=constantsTempCuffPat(),
                 rateFactor=rateFactorCuffPat,
                 T_ratefactor=-10.):
@@ -264,6 +270,11 @@ def PerolRiceAnalytic(Ts,adot,H,eps_xy,nz=101,
     T:          1-D array,  Analytic solution for ice temperature
     """
 
+    # if the surface accumulation is input in m/yr convert to m/s
+    if adot>1e-5:
+        adot/=const.spy
+    if eps_xy>1e-4:
+        eps_xy/=const.spy
     # Height
     z = np.linspace(0,H,nz)
     # Peclet Number
