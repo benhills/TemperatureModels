@@ -8,6 +8,7 @@ Created on Fri Jul  6 12:21:15 2018
 I want to standardize all of the temperature models.
 The models included here, from simplest to most complex are:
     Robin (1955)
+    Rezvanbehbahani et al. (2019)
     Meyer and Minchew (2018) contact problem
     Perol and Rice (2015)
         Analytic Solution
@@ -110,12 +111,12 @@ def Rezvan_T(Ts,qgeo,H,adot,nz=101,
     adot:   float,  Accumulation rate (m/yr)
     nz:     int,    Number of layers in the ice column
     const:  class,  Constants
-    rateFactor:
-    T_ratefactor:
-    dHdx
-    tau_dx
-    gamma:
-    gamma_plus:
+    rateFactor:     function, to calculate the rate factor from Glen's Flow Law
+    T_ratefactor:   float, Temperature input to rate factor function (C)
+    dHdx:       float, Surface slope to calculate tau_dx
+    tau_dx:     float, driving stress input directly (Pa)
+    gamma:      float, exponent on the vertical velocity
+    gamma_plus: bool, optional to determine gama_plus from the logarithmic regression with Pe Number
 
     Output
     ----------
@@ -211,7 +212,7 @@ def Meyer_T(Ts,H,adot,eps_xy,nz=101,
     # Peclet Number
     Pe = (const.rho*const.Cp*adot*H)/(const.k)
     LAM = lam*H**2./(const.k*dT)
-    print('Meyer', A, S)
+    print('Meyer; Pe:', Pe,'Br:',Br)
     # temperature solution is different for diffusion only vs. advection-diffusion
     if abs(Pe) < 1e-3:
         # Critical Shear Strain
