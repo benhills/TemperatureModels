@@ -8,6 +8,8 @@ Created on Wed Aug  1 10:49:17 2018
 
 import numpy as np
 from scipy.special import erfc
+from Constants import constantsTempCuffPat
+const = constantsTempCuffPat()
 
 # Analytic solutions to conduction problems
 # All are from Carslaw and Jaeger (1959)
@@ -18,85 +20,90 @@ from scipy.special import erfc
 # The infinite and semi-infinite solid
 # Carslaw and Jaeger Ch. 2
 
-def erfSolution(dT,rho,C,k,t,x):
+def erfSolution(dT,t,x,const=const):
     """
     Carslaw and Jaeger Section 2.4
     Boundary step change in temperature, held constant at boundary
 
     Parameters
     --------
-    dT
-    rho
-    C
-    k
-    t
-    x
+    dT: float
+        Temperature change
+    t:  float
+        Time since temperature change (seconds)
+    x:  array
+        Distance from temperature change (meters)
 
     Output
     --------
-    T
-
+    T:  array
+        Temperature profile
     """
     # diffusivity
-    alpha = k/(rho*C)
+    alpha = const.k/(const.rho*const.Cp)
     # equation 2.4-7
     T = dT*erfc(abs(x)/(2.*np.sqrt(alpha*t)))
     return T
 
-def harmonicSurface(Tmaat,Tamp,rho,C,k,t,x,w):
+def harmonicSurface(Tmaat,Tamp,t,x,w=2.*np.pi/const.spy,const=const):
     """
     Carslaw and Jaeger Section 2.6
     Surface Boundary Temperature Harmonic Function
 
     Parameters
     --------
-    Tmaat
-    Tamp
-    rho
-    C
-    k
-    t
-    x
-    w
+    Tmaat:  float
+        Mean annual air temperature
+    Tamp:   float
+        Seasonal amplitude
+    t:      float
+        Time in period (seconds)
+    x:      array
+        Distance from surface boundary (meters)
+    w:      float
+        Period of the cycle
 
     Output
     --------
-    T
-
+    T:  array
+        Temperature profile
     """
     # diffusivity
-    alpha = k/(rho*C)
+    alpha = const.k/(const.rho*const.Cp)
     # equation 2.6-8
     T = Tmaat + Tamp * np.exp(-x*np.sqrt(w/(2.*alpha))) * np.cos((w*t)-x*np.sqrt(w/(2*alpha)))
     return T
 
 ###############################################################################
 
-def harmonicAdvection(Tmaat,Tamp,rho,C,k,t,x,w,vel):
+def harmonicAdvection(Tmaat,Tamp,t,x,w=2.*np.pi/const.spy,vel=0./const.spy,const=const):
     """
     Survace boundary temperature, harmonic function AND advection ###
     Logan and Zlotnic (1995)
 
     Parameters
     --------
-    Tmaat
-    Tamp
-    rho
-    C
-    k
-    t
-    x
-    w
-    vel
+    Tmaat:  float
+        Mean annual air temperature
+    Tamp:   float
+        Seasonal amplitude
+    t:      float
+        Time in period (seconds)
+    x:      array
+        Distance from surface boundary (meters)
+    w:      float
+        Period of the cycle
+    vel:    float
+        downward velocity
 
     Output
     --------
-    T
-
+    T:  array
+        Temperature profile
     """
 
     # diffusivity
-    alpha = k/(rho*C)
+    alpha = const.k/(const.rho*const.Cp)
     # set up with variables from LZ (1995) eq. 4.4
     phi = w/alpha
     psi = vel**2/(4*alpha**2)
@@ -129,8 +136,6 @@ def parallelPlates(dT,rho,C,k,t,x,l,N=1000):
     Output
     --------
     T:      float,  Temperature at output time and location
-
-
     """
 
     # diffusivity
